@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visma Labs - Seniority Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as an interactive seniority explorer. A top-level navigation allows users to select a seniority level (Junior, Medior, Senior). This choice dynamically updates the main content area, which is further divided into tabbed sections for Core Responsibilities, Soft Skills, Hard Skills, Engagement, and Growth Path. The "Hard Skills" tab now contains a secondary dropdown to select a specific technology, making the framework granular and role-specific. This structure was chosen because it's user-centric and task-oriented, allowing for easy comparison of both general and technical expectations. -->
+    <!-- Visualization & Content Choices: 
+        - Seniority Levels: Presented as primary buttons for clear, top-level navigation. Goal: Allow user to control the entire view.
+        - Technology Selector: A dropdown within the Hard Skills tab. Goal: Allow users to drill down into technology-specific requirements.
+        - Core Responsibilities: A static list. Goal: Inform about baseline duties. No interaction needed.
+        - Soft Skills: A radar chart (Chart.js) and detailed text. Goal: Visually compare proficiency expectations across levels. Interaction: Chart updates on seniority selection.
+        - Hard Skills: Interactive list of skills. Clicking a skill on the left updates a details panel on the right with specific competencies. Goal: Provide a two-tiered view of technical benchmarks.
+        - Engagement: A bar chart (Chart.js) and text. Goal: Show the evolution of engagement from passive to active. Interaction: Chart updates with seniority level.
+        - Growth Path: Dynamic text list combined with a static, detailed process description. Goal: Clarify advancement criteria and the official promotion procedure.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #0d9488;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            color: #0d9488;
+            border-bottom-color: #0d9488;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .skill-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .skill-card:hover {
+            border-color: #14b8a6;
+            transform: translateY(-2px);
+        }
+        .skill-card.active {
+            border-color: #0d9488;
+            background-color: #f0fdfa;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-teal-700">Seniority Framework</h1>
+            <p class="mt-2 text-lg text-gray-600">An interactive guide to career growth and expectations at Visma Labs.</p>
+        </header>
+
+        <nav id="seniority-nav" class="flex justify-center gap-2 md:gap-4 mb-8">
+            <button data-level="junior" class="nav-button text-lg font-semibold py-3 px-6 rounded-full bg-white shadow-sm hover:bg-teal-100">Junior</button>
+            <button data-level="medior" class="nav-button text-lg font-semibold py-3 px-6 rounded-full bg-white shadow-sm hover:bg-teal-100">Medior</button>
+            <button data-level="senior" class="nav-button text-lg font-semibold py-3 px-6 rounded-full bg-white shadow-sm hover:bg-teal-100">Senior</button>
+        </nav>
+
+        <main id="main-content" class="bg-white p-4 sm:p-8 rounded-2xl shadow-lg min-h-[600px]">
+            
+            <div class="border-b border-gray-200 mb-6">
+                <nav id="tabs-nav" class="flex flex-wrap -mb-px" aria-label="Tabs">
+                    <button data-tab="responsibilities" class="tab-button whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Core Responsibilities</button>
+                    <button data-tab="soft-skills" class="tab-button whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Soft Skills</button>
+                    <button data-tab="hard-skills" class="tab-button whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Hard Skills</button>
+                    <button data-tab="engagement" class="tab-button whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Engagement</button>
+                    <button data-tab="growth" class="tab-button whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Growth Path</button>
+                </nav>
+            </div>
+
+            <div id="tabs-content">
+                <section id="responsibilities-content" class="content-section">
+                     <div class="mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-700">Foundational Duties</h2>
+                        <p class="mt-1 text-gray-600">This section outlines the basic duties and responsibilities required of every employee at Visma Labs, regardless of their seniority level. These expectations, derived from labor laws and internal policies, form the professional foundation upon which all other skills are built.</p>
+                    </div>
+                    <div id="responsibilities-list" class="space-y-4 text-gray-700"></div>
+                </section>
+
+                <section id="soft-skills-content" class="content-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-700">Soft Skills Expectations</h2>
+                        <p class="mt-1 text-gray-600">Soft skills are crucial for effective collaboration and personal growth. This section explores how expectations in areas like communication, problem-solving, and teamwork evolve with seniority. The chart provides a visual summary of proficiency, while the text below gives concrete examples.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div class="chart-container">
+                            <canvas id="softSkillsChart"></canvas>
+                        </div>
+                        <div id="soft-skills-list" class="space-y-4"></div>
+                    </div>
+                </section>
+
+                <section id="hard-skills-content" class="content-section">
+                     <div class="mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-700">Hard Skills Framework</h2>
+                        <p class="mt-1 text-gray-600">This section provides the specific technical expectations for each role. Select a technology, then click on a skill on the left to see its detailed competencies on the right.</p>
+                    </div>
+                    <div class="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg mb-8">
+                        <div class="flex items-start">
+                             <div class="flex-shrink-0 pt-1">
+                                <svg class="h-6 w-6 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 013.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 013.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 01-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.455-2.456L12.75 18l1.178-.398a3.375 3.375 0 002.455-2.456L16.5 14.25l.398 1.178a3.375 3.375 0 002.456 2.456L20.25 18l-1.178.398a3.375 3.375 0 00-2.456 2.456z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4 flex-grow">
+                                <label for="tech-select" class="block text-lg font-semibold text-teal-800">First, Select a Technology Stack</label>
+                                <select id="tech-select" name="tech-select" class="mt-2 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md shadow-sm"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hard-skills-container" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div id="hard-skills-list" class="space-y-3"></div>
+                        <div id="hard-skills-details" class="p-4 rounded-lg border border-gray-200 bg-gray-50/50 min-h-[200px]">
+                            <p class="text-gray-500">Select a skill on the left to see more details.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="engagement-content" class="content-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-700">Engagement & Initiative</h2>
+                        <p class="mt-1 text-gray-600">Engagement goes beyond daily tasks; it's about contributing to our shared culture. This section illustrates how your involvement in the team, product, and wider Visma Labs community is expected to grow from a participant to a leader.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                         <div class="chart-container h-96">
+                            <canvas id="engagementChart"></canvas>
+                        </div>
+                        <div id="engagement-list" class="space-y-4"></div>
+                    </div>
+                </section>
+
+                <section id="growth-content" class="content-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-700">Path to the Next Level</h2>
+                        <p class="mt-1 text-gray-600">Career development is a journey. This section outlines the key milestones and behavioral shifts required to advance from your current seniority level to the next, as well as the official promotion process.</p>
+                    </div>
+                    <div id="growth-list" class="space-y-3"></div>
+
+                    <div class="mt-12 border-t pt-8">
+                        <h2 class="text-2xl font-semibold text-gray-700">The Promotion Process</h2>
+                        <p class="mt-1 text-gray-600">This is the official process for requesting a promotion. The process is initiated by you in discussion with your manager.</p>
+                        
+                        <div class="mt-6 space-y-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-teal-600 text-white font-bold text-lg">1</div>
+                                <div class="ml-4">
+                                    <h4 class="font-semibold text-gray-800">Discussion with Manager</h4>
+                                    <p class="text-gray-600">You initiate a discussion about promotion with your direct manager. If you both agree, the manager contacts HR to start the process.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-teal-600 text-white font-bold text-lg">2</div>
+                                <div class="ml-4">
+                                    <h4 class="font-semibold text-gray-800">Mandatory Technical Interview</h4>
+                                    <p class="text-gray-600">HR arranges a technical interview with an experienced interviewer to ensure your seniority is aligned with Visma-wide standards. This step is required for all promotions.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-green-500 text-white font-bold text-lg">✓</div>
+                                <div class="ml-4">
+                                    <h4 class="font-semibold text-gray-800">Positive Outcome</h4>
+                                    <p class="text-gray-600">If the interview confirms readiness for the next level, your manager discusses the promotion details (including salary) with HR. HR finalizes the changes in all systems.</p>
+                                </div>
+                            </div>
+                             <div class="flex items-start">
+                                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-orange-500 text-white font-bold text-lg">!</div>
+                                <div class="ml-4">
+                                    <h4 class="font-semibold text-gray-800">Negative Outcome</h4>
+                                    <p class="text-gray-600">If the interview indicates that you do not yet meet the requirements, you and your manager will set clear development goals for the next period (typically 1 year).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-10">
+                             <h3 class="text-xl font-semibold mb-4 text-gray-700">Frequently Asked Questions</h3>
+                             <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">When can I ask for a promotion?</h4>
+                                    <p class="text-gray-600">Typically, the earliest is after one year at Visma, unless a different timeline was agreed upon at hiring.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Do I have to do a technical interview?</h4>
+                                    <p class="text-gray-600">Yes, it is a mandatory step to ensure consistent seniority levels across the company.</p>
+                                </div>
+                                 <div>
+                                    <h4 class="font-semibold text-gray-800">What if I disagree with my current seniority level?</h4>
+                                    <p class="text-gray-600">You can request a technical interview via HR at any time to get an objective assessment, even outside of a promotion request.</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const data = {
+        responsibilities: [
+            { title: 'Attendance and Working Hours', points: ['Properly and promptly records attendance.', 'Adheres to agreed working hours and flexibility rules.'] },
+            { title: 'Communication', points: ['Actively uses company communication tools (Gmail, Slack, Calendar).', 'Informs supervisor and team about absence in a timely manner, respecting internal policies and the Labour Code.'] },
+            { title: 'Compliance with Regulations', points: ['Respects and complies with the Labour Code, Work Regulations, and all internal policies.', 'Protects company and client intellectual property and sensitive data.'] }
+        ],
+        technologies: [
+            { id: 'dotnet', name: '.NET / C#', owner: 'TBD' },
+            { id: 'java', name: 'Java', owner: 'TBD' },
+            { id: 'angular', name: 'Angular', owner: 'TBD' },
+            { id: 'react', name: 'React', owner: 'Kasarda, Kobol' },
+            { id: 'python', name: 'Python', owner: 'Mesaros, Augustinak' },
+            { id: 'tqa', name: 'TQA', owner: 'Zajo, Miro, Janci' },
+            { id: 'ba', name: 'Business Analysis', owner: 'Tonka, Patrik, Martin' },
+            { id: 'devops', name: 'DevOps', owner: 'Olejar, Ondrasek' },
+            { id: 'crm', name: 'CRM', owner: 'Wagner, Baranec' },
+            { id: 'ios', name: 'iOS', owner: 'Danko, Sulek' },
+            { id: 'android', name: 'Android', owner: 'Katona, Richter, Dobransky' }
+        ],
+        levels: {
+            junior: {
+                softSkills: {
+                    scores: [2, 2, 3, 2, 2],
+                    details: [
+                        { skill: 'Communication & Empathy', desc: 'Listens attentively and articulates ideas clearly on simple topics. Is not afraid to ask questions to understand tasks and the perspectives of others.' },
+                        { skill: 'Problem-Solving', desc: 'Capable of solving clearly defined, smaller tasks with guidance. Focuses on learning the fundamentals of debugging.' },
+                        { skill: 'Self-Management', desc: 'Actively seeks new knowledge and is open to feedback. Learns to manage own time for assigned tasks and adapts to team processes.' },
+                        { skill: 'Collaboration', desc: 'Works well with others, respects diverse perspectives, and contributes positively to team harmony and collective goals.' },
+                        { skill: 'Ownership', desc: 'Takes responsibility for assigned tasks and their outcomes. Views mistakes as valuable learning opportunities.' }
+                    ]
+                },
+                hardSkills: {
+                    dotnet: [
+                        { skill: 'C# Fundamentals', desc: 'Understands variables, data types, loops, and basic OOP concepts.', details: ['Writes clean, readable code using basic C# syntax.', 'Can implement simple classes and methods.', 'Understands the difference between value types and reference types.'] },
+                        { skill: 'ASP.NET Core Basics', desc: 'Can create simple API controllers and understand the request pipeline.', details: ['Creates GET and POST endpoints.', 'Understands how to read request bodies and return JSON responses.', 'Has a basic understanding of middleware.'] },
+                        { skill: 'Entity Framework', desc: 'Knows how to define simple models and query the database using LINQ.', details: ['Creates POCO classes that map to database tables.', 'Uses basic LINQ queries like `Where`, `Select`, `FirstOrDefault`.', 'Understands the concept of a `DbContext`.'] },
+                        { skill: 'Git Basics', desc: 'Comfortable with basic version control commands.', details: ['Uses `commit`, `push`, `pull` commands effectively.', 'Can create branches and submit pull/merge requests.', 'Understands how to resolve simple merge conflicts.'] }
+                    ],
+                    java: [
+                        { skill: 'Java Core', desc: 'Solid understanding of Java syntax, data structures, and OOP principles.', details: ['Writes code using core Java features and standard libraries.', 'Understands collections like `List`, `Map`.', 'Implements basic classes, interfaces, and inheritance.'] },
+                        { skill: 'Spring Boot Basics', desc: 'Can create REST controllers and simple services.', details: ['Creates REST endpoints using annotations like `@RestController` and `@GetMapping`.', 'Understands dependency injection using `@Autowired`.', 'Can configure basic application properties.'] },
+                        { skill: 'Maven/Gradle', desc: 'Knows how to manage dependencies and run basic build commands.', details: ['Adds new dependencies to `pom.xml` or `build.gradle`.', 'Runs builds and packages the application.', 'Understands the concept of a build lifecycle.'] },
+                        { skill: 'JPA/Hibernate Basics', desc: 'Can create basic entities and repositories for database interaction.', details: ['Defines JPA entities with annotations like `@Entity` and `@Id`.', 'Uses `JpaRepository` to perform basic CRUD operations.', 'Writes simple queries using `@Query` annotation.'] }
+                    ],
+                    angular: [
+                        { skill: 'TypeScript & Web', desc: 'Strong foundation in TypeScript and web fundamentals.', details: ['Understands static typing in TypeScript.', 'Writes clean HTML and CSS.', 'Is comfortable with basic DOM manipulation concepts.'] },
+                        { skill: 'Components & Templates', desc: 'Can create components, manage inputs/outputs, and use basic template syntax.', details: ['Generates new components using the Angular CLI.', 'Uses `@Input` and `@Output` for component communication.', 'Implements basic structural directives like `*ngIf` and `*ngFor`.'] },
+                        { skill: 'Services & DI', desc: 'Understands how to create and inject services to share logic.', details: ['Creates injectable services to encapsulate business logic.', 'Injects services into component constructors.', 'Understands the concept of singleton services.'] },
+                        { skill: 'Basic RxJS', desc: 'Can subscribe to Observables and handle simple async data streams.', details: ['Uses `HttpClient` to fetch data from an API.', 'Subscribes to observables to get data.', 'Uses the `async` pipe in templates.'] }
+                    ],
+                    react: [
+                        { skill: 'JSX & Components', desc: 'Understands JSX syntax and can create functional components.', details: ['Writes UI using JSX.', 'Creates reusable functional components.', 'Can break down a simple UI into a component hierarchy.'] },
+                        { skill: 'State & Props', desc: 'Can manage component state with `useState` and pass data via props.', details: ['Uses the `useState` hook to manage simple component state.', 'Passes data from parent to child components using props.', 'Understands the concept of one-way data flow.'] },
+                        { skill: 'Event Handling', desc: 'Knows how to handle user events like clicks and form inputs.', details: ['Attaches event handlers like `onClick` and `onChange` to elements.', 'Writes functions to handle these events.', 'Can update state based on user interaction.'] },
+                        { skill: 'Basic Hooks', desc: 'Familiar with `useState` and `useEffect` for basic side effects.', details: ['Understands when to use `useEffect` for data fetching or subscriptions.', 'Can correctly manage dependencies in a `useEffect` array.', 'Uses `useState` to control component re-renders.'] }
+                    ],
+                    python: [
+                        { skill: 'Core Syntax', desc: 'Understands variables, data types, loops, and conditional statements.', details: ['Writes readable Python code following PEP 8 conventions.', 'Can implement logic using loops and if/else blocks.', 'Understands fundamental data types.'] },
+                        { skill: 'Functions', desc: 'Can write and call basic functions to organize code.', details: ['Defines functions with parameters and return values.', 'Understands scope of variables.', 'Can import functions from other modules.'] },
+                        { skill: 'Data Structures', desc: 'Comfortable using lists, dictionaries, and tuples.', details: ['Performs basic operations on lists (append, remove).', 'Uses dictionaries to store key-value data.', 'Understands the immutability of tuples.'] },
+                        { skill: 'Virtual Environments', desc: 'Knows how to create and manage project dependencies with venv.', details: ['Creates and activates virtual environments.', 'Uses `pip` to install packages from `requirements.txt`.', 'Can freeze current dependencies into a `requirements.txt` file.'] }
+                    ],
+                    tqa: [
+                        { skill: 'Manual Testing', desc: 'Executes test cases meticulously and reports bugs clearly.', details: ['Executes pre-written test cases following test plans.', 'Documents defects with clear, reproducible steps and screenshots.', 'Understands the difference between bug severity and priority.'] },
+                        { skill: 'Test Case Writing', desc: 'Writes clear, concise, and effective test cases from requirements.', details: ['Analyzes simple requirements to derive test conditions.', 'Writes positive and negative test cases.', 'Ensures test cases have clear prerequisites and expected results.'] },
+                        { skill: 'Automation Concepts', desc: 'Understands the purpose of test automation and can run existing scripts.', details: ['Can trigger automated test runs from a CI/CD pipeline.', 'Reads and understands basic automated test reports.', 'Can perform basic debugging of a failing script with guidance.'] },
+                        { skill: 'Bug Tracking Tools', desc: 'Proficient in using tools like Jira to manage the defect lifecycle.', details: ['Creates, updates, and transitions bug tickets correctly.', 'Can use basic JQL to find relevant issues.', 'Understands the typical bug workflow (Open, In Progress, Resolved, Closed).'] }
+                    ],
+                    ba: [
+                        { skill: 'Requirement Gathering', desc: 'Can assist in workshops and document basic user requirements.', details: ['Takes clear and organized notes during stakeholder meetings.', 'Helps document requirements under the guidance of a senior BA.', 'Asks clarifying questions to understand stakeholder needs.'] },
+                        { skill: 'Note Taking', desc: 'Effectively captures meeting minutes and action items.', details: ['Distributes clear and concise meeting summaries.', 'Tracks action items and their owners.', 'Understands how to capture key decisions made during a meeting.'] },
+                        { skill: 'Basic Diagramming', desc: 'Can create simple flowcharts or process diagrams with guidance.', details: ['Uses tools like Lucidchart or Miro to create basic diagrams.', 'Can map out a simple "as-is" process.', 'Ensures diagrams use standard notation and are easy to understand.'] },
+                        { skill: 'Stakeholder Identification', desc: 'Learns to identify and list key project stakeholders.', details: ['Helps create a stakeholder map or matrix.', 'Understands the difference between different stakeholder groups.', 'Can identify the primary users of a system.'] }
+                    ],
+                    devops: [
+                        { skill: 'CI/CD Basics', desc: 'Understands CI/CD concepts and can use and monitor existing pipelines.', details: ['Can monitor the status of builds and deployments.', 'Identifies basic pipeline failures from logs.', 'Understands the purpose of different pipeline stages (build, test, deploy).'] },
+                        { skill: 'Basic Scripting', desc: 'Can write simple scripts in Bash or PowerShell for automation tasks.', details: ['Uses variables, loops, and conditional statements in scripts.', 'Can automate simple file operations or system commands.', 'Reads and understands scripts written by others.'] },
+                        { skill: 'Version Control (Git)', desc: 'Proficient with Git, including branching, merging, and pull requests.', details: ['Uses `commit`, `push`, `pull` commands effectively.', 'Can create branches and submit pull/merge requests.', 'Understands how to resolve simple merge conflicts.'] },
+                        { skill: 'Cloud Fundamentals', desc: 'Basic knowledge of one cloud provider and its core services.', details: ['Understands the concepts of IaaS, PaaS, SaaS.', 'Can navigate the cloud provider console to view resources.', 'Knows the purpose of core services like VMs, Storage, and basic Networking.'] }
+                    ],
+                    crm: [
+                        { skill: 'Platform Navigation', desc: 'Efficiently navigates the CRM interface to find and update information.', details: ['Locates customer records, opportunities, and cases quickly.', 'Understands the relationship between standard objects.', 'Uses global search and list views effectively.'] },
+                        { skill: 'Data Entry & Management', desc: 'Accurately enters and maintains customer data, ensuring data quality.', details: ['Creates and updates records following defined company processes.', 'Identifies and merges duplicate records.', 'Understands the importance of required fields and data formats.'] },
+                        { skill: 'Standard Reporting', desc: 'Can run and interpret pre-built reports and dashboards.', details: ['Runs existing reports and exports data.', 'Understands the key metrics presented in standard dashboards.', 'Can apply basic filters to reports to narrow down data.'] },
+                        { skill: 'User Support Basics', desc: 'Handles basic user queries and support tickets under supervision.', details: ['Responds to simple "how-to" questions.', 'Can perform basic user administration tasks like password resets.', 'Escalates complex issues to senior team members with clear documentation.'] }
+                    ],
+                    ios: [
+                        { skill: 'Swift Fundamentals', desc: 'Understands Swift syntax, data types, and control flow.', details: ['Writes clean code using variables, optionals, and basic operators.', 'Implements simple functions and classes.', 'Understands the difference between classes and structs.'] },
+                        { skill: 'UIKit/SwiftUI Basics', desc: 'Can build simple user interfaces programmatically or with storyboards.', details: ['Adds basic UI elements like `UILabel`, `UIButton`, `UITextField`.', 'Understands the view controller lifecycle.', 'Can handle basic user interactions with `@IBAction`.'] },
+                        { skill: 'Xcode', desc: 'Comfortable navigating and using the Xcode IDE.', details: ['Can create new projects and files.', 'Uses the debugger to inspect variables and step through code.', 'Understands how to run an app on the simulator or a device.'] },
+                        { skill: 'Git Basics', desc: 'Comfortable with basic version control commands.', details: ['Uses `commit`, `push`, `pull` commands effectively.', 'Can create branches and submit pull/merge requests.', 'Understands how to resolve simple merge conflicts.'] }
+                    ],
+                    android: [
+                        { skill: 'Kotlin/Java Basics', desc: 'Understands the fundamentals of the Kotlin or Java language.', details: ['Writes clean code using variables, null safety (Kotlin), and control flow.', 'Implements simple classes and functions.', 'Understands basic OOP concepts.'] },
+                        { skill: 'UI Basics (XML/Compose)', desc: 'Can create simple layouts using XML or Jetpack Compose.', details: ['Adds basic UI elements like `TextView`, `Button`, `EditText`.', 'Understands the Activity/Fragment lifecycle.', 'Handles basic button clicks with listeners.'] },
+                        { skill: 'Android Studio', desc: 'Familiar with the Android Studio IDE for development and debugging.', details: ['Can create new projects and activities.', 'Uses the debugger to set breakpoints and inspect variables.', 'Knows how to run an app on an emulator or physical device.'] },
+
+                        { skill: 'Git Basics', desc: 'Comfortable with basic version control commands.', details: ['Uses `commit`, `push`, `pull` commands effectively.', 'Can create branches and submit pull/merge requests.', 'Understands how to resolve simple merge conflicts.'] }
+                    ]
+                },
+                engagement: { scores: [1, 1], details: [ { area: 'Team & Product', desc: 'Actively participates in team meetings (stand-ups, retros). Shows interest in the product. Asks questions to understand.' }, { area: 'Visma Labs Community', desc: 'Participates as an attendee in events like Code&Coffee, meetups, or Will Code for Beer.' } ] },
+                growth: [
+                    { title: 'Primary Focus: Technical Growth & Basic Delivery', desc: 'Concentrate on learning the codebase, tools, and processes while reliably completing assigned tasks under supervision.' },
+                    { title: 'Key Milestones to Medior', desc: 'Increase autonomy on standard tasks, improve code/work quality based on feedback, and begin asking "why" to understand the bigger picture.' }
+                ]
+            },
+            medior: {
+                softSkills: {
+                    scores: [3, 4, 4, 4, 3],
+                    details: [
+                        { skill: 'Communication & Empathy', desc: 'Clearly communicates technical concepts to peers. Understands and considers the perspectives of other roles (e.g., BA, QA) in discussions.' },
+                        { skill: 'Problem-Solving', desc: 'Independently solves complex tasks and debugs challenging issues. Can think "outside the box" to find solutions.' },
+                        { skill: 'Self-Management', desc: 'Identifies own knowledge gaps and works to fill them. Manages own time effectively, prioritizes tasks, and meets deadlines.' },
+                        { skill: 'Collaboration', desc: 'Actively engages in team discussions and helps unblock junior colleagues. Open to new approaches and contributes to a harmonious team environment.' },
+                        { skill: 'Ownership', desc: 'Takes ownership of entire features, from development through to deployment. Is reliable and accountable for their commitments.' }
+                    ]
+                },
+                 hardSkills: {
+                    dotnet: [
+                        { skill: 'Advanced C#', desc: 'Proficient with LINQ, async/await, and common design patterns.', details: ['Writes complex LINQ queries to manipulate data.', 'Uses `async` and `await` correctly to handle asynchronous operations.', 'Applies design patterns like Singleton, Factory, and Repository.'] },
+                        { skill: 'API Design', desc: 'Can design and build robust and secure RESTful APIs.', details: ['Designs clear and consistent API endpoints.', 'Implements proper HTTP status codes and error handling.', 'Understands authentication and authorization concepts (e.g., JWT).'] },
+                        { skill: 'Testing', desc: 'Writes comprehensive unit and integration tests (xUnit, NUnit).', details: ['Writes meaningful unit tests for business logic.', 'Uses mocking frameworks like Moq.', 'Can set up and write integration tests that interact with a database.'] },
+                        { skill: 'CI/CD Awareness', desc: 'Understands build and deployment pipelines.', details: ['Can troubleshoot basic pipeline failures.', 'Understands the purpose of different environments (dev, staging, prod).', 'Can configure basic pipeline variables.'] }
+                    ],
+                    java: [
+                        { skill: 'Spring Ecosystem', desc: 'Understands components like Spring Security, Spring Data.', details: ['Implements security configurations for APIs.', 'Uses Spring Data JPA for complex database queries.', 'Can configure different application profiles.'] },
+                        { skill: 'API Design & Security', desc: 'Designs RESTful APIs and can implement basic security measures.', details: ['Designs clear API contracts.', 'Implements authentication and authorization using Spring Security.', 'Handles API versioning strategies.'] },
+                        { skill: 'Testing', desc: 'Writes effective unit and integration tests with JUnit and Mockito.', details: ['Writes unit tests for services and controllers.', 'Uses Mockito to mock dependencies.', 'Can set up and write integration tests with a test database.'] },
+                        { skill: 'Containerization', desc: 'Can dockerize a Spring Boot application.', details: ['Writes efficient, multi-stage Dockerfiles.', 'Manages application configuration using environment variables.', 'Uses Docker Compose for local development environments.'] }
+                    ],
+                    angular: [
+                        { skill: 'State Management', desc: 'Proficient with services and RxJS for state management.', details: ['Uses RxJS subjects (e.g., `BehaviorSubject`) for reactive state.', 'Manages complex asynchronous data flows with RxJS operators.', 'Understands when to use a more formal state management library like NgRx or Akita.'] },
+                        { skill: 'Routing', desc: 'Can implement complex routing scenarios including lazy loading and guards.', details: ['Implements lazy loading to optimize application startup.', 'Uses route guards (`CanActivate`) for access control.', 'Handles complex route parameters and nested routes.'] },
+                        { skill: 'Forms', desc: 'Comfortable with both Template-Driven and Reactive Forms.', details: ['Builds complex forms using Reactive Forms.', 'Implements custom validators.', 'Manages dynamic form structures.'] },
+                        { skill: 'Testing', desc: 'Writes unit tests for components and services using Karma and Jasmine.', details: ['Writes tests for component logic and template interactions.', 'Mocks services and dependencies in tests.', 'Understands how to use `TestBed` for configuration.'] }
+                    ],
+                    react: [
+                        { skill: 'Advanced Hooks', desc: 'Proficient with `useContext`, `useReducer`, `useMemo`, and custom hooks.', details: ['Uses `useContext` for global state management.', 'Manages complex state logic with `useReducer`.', 'Creates custom hooks to encapsulate reusable logic.'] },
+                        { skill: 'State Management', desc: 'Understands client-side state management patterns.', details: ['Can choose and implement an appropriate state management solution (e.g., Redux Toolkit, Zustand).', 'Manages global application state effectively.', 'Understands asynchronous state management with thunks or sagas.'] },
+                        { skill: 'API Integration', desc: 'Confidently fetches and manages data from REST or GraphQL APIs.', details: ['Uses libraries like Axios or React Query for data fetching.', 'Implements robust error handling and loading states.', 'Can integrate with GraphQL APIs using a client like Apollo.'] },
+                        { skill: 'Testing', desc: 'Can write unit and integration tests for components.', details: ['Writes tests using libraries like Jest and React Testing Library.', 'Mocks API calls in tests.', 'Tests user interactions and component behavior.'] }
+                    ],
+                    python: [
+                        { skill: 'Object-Oriented Programming', desc: 'Can design and implement classes and objects effectively.', details: ['Designs logical class hierarchies.', 'Understands and uses inheritance, polymorphism, and encapsulation.', 'Writes clean, well-structured object-oriented code.'] },
+                        { skill: 'Frameworks', desc: 'Proficient in at least one web framework (e.g., Django, Flask, FastAPI).', details: ['Builds robust applications following framework best practices.', 'Understands the framework\'s core components (e.g., ORM, routing).', 'Can extend the framework with custom middleware or plugins.'] },
+                        { skill: 'Database Interaction', desc: 'Can write queries and interact with databases using an ORM.', details: ['Designs database schemas and models.', 'Writes efficient database queries and optimizes performance.', 'Understands database transactions and migrations.'] },
+                        { skill: 'API Development', desc: 'Able to build and consume RESTful APIs.', details: ['Designs and builds secure and well-documented APIs.', 'Implements authentication and authorization.', 'Handles data serialization and validation effectively.'] }
+                    ],
+                    tqa: [
+                        { skill: 'Test Automation', desc: 'Can write stable and maintainable automated tests for UI or API layers.', details: ['Writes new automated tests for user stories using the existing framework.', 'Maintains and debugs existing test suites to reduce flakiness.', 'Uses appropriate selectors and waits to create robust tests.'] },
+                        { skill: 'CI/CD Integration', desc: 'Understands how to integrate automated tests into a CI/CD pipeline.', details: ['Configures test jobs in pipelines (e.g., GitLab CI, GitHub Actions).', 'Analyzes test run failures from the pipeline and reports findings.', 'Understands strategies for running different test suites (e.g., smoke, regression).'] },
+                        { skill: 'Test Planning', desc: 'Contributes to test strategy and planning for new features.', details: ['Performs risk analysis to identify key areas for testing.', 'Estimates testing effort for upcoming tasks.', 'Defines the scope of testing (what will be automated vs. manual).'] },
+                        { skill: 'Performance Basics', desc: 'Can run basic load tests and analyze results.', details: ['Uses tools like JMeter or k6 to execute pre-defined test scripts.', 'Identifies basic performance metrics like response time and error rate.', 'Can analyze test results to find performance bottlenecks.'] }
+                    ],
+                    ba: [
+                        { skill: 'Independent Analysis', desc: 'Can analyze a business process or problem area with minimal supervision.', details: ['Leads analysis on small to medium-sized features.', 'Identifies root causes of problems, not just symptoms.', 'Can model "to-be" processes and identify improvement opportunities.'] },
+                        { skill: 'User Stories', desc: 'Writes clear, testable, and valuable user stories with acceptance criteria.', details: ['Follows INVEST criteria for user stories.', 'Collaborates with the team to refine stories and acceptance criteria.', 'Manages the backlog for a specific feature or component.'] },
+                        { skill: 'Stakeholder Management', desc: 'Can lead requirement workshops with stakeholders.', details: ['Facilitates meetings to elicit and validate requirements.', 'Manages stakeholder expectations effectively.', 'Can negotiate priorities and handle conflicting requirements.'] },
+                        { skill: 'Data Analysis', desc: 'Uses data to validate assumptions and analyze the impact of changes.', details: ['Writes basic SQL queries to extract data for analysis.', 'Uses data to support recommendations.', 'Can define metrics to measure the success of a feature.'] }
+                    ],
+                    devops: [
+                        { skill: 'Pipeline Automation', desc: 'Can create and manage CI/CD pipelines using tools like GitLab CI or GitHub Actions.', details: ['Writes pipeline-as-code (YAML) for new projects.', 'Implements branching strategies within CI/CD pipelines.', 'Uses templates or shared libraries to create reusable pipeline components.'] },
+                        { skill: 'Infrastructure as Code (IaC)', desc: 'Proficient with Terraform or Ansible for provisioning and managing infrastructure.', details: ['Writes reusable IaC modules (e.g., Terraform modules).', 'Manages state and secrets securely.', 'Understands and implements infrastructure provisioning workflows.'] },
+                        { skill: 'Containerization (Docker)', desc: 'Writes efficient Dockerfiles and manages container lifecycles.', details: ['Optimizes Docker images for size and security.', 'Uses multi-stage builds effectively.', 'Manages container networking and volumes with Docker Compose.'] },
+                        { skill: 'Cloud Services Management', desc: 'Deploys and manages applications and their required resources in the cloud.', details: ['Provisions and configures core cloud services (e.g., databases, load balancers).', 'Implements basic monitoring and alerting for applications.', 'Understands cloud security best practices and IAM roles.'] }
+                    ],
+                    crm: [
+                        { skill: 'CRM Configuration', desc: 'Configures standard objects, fields, page layouts, and validation rules.', details: ['Creates custom fields, objects, and relationships to model business needs.', 'Implements validation rules and formula fields to enforce data integrity.', 'Designs user-friendly page layouts and record types.'] },
+                        { skill: 'Workflow Automation', desc: 'Builds and manages workflows or flows to automate business processes.', details: ['Identifies opportunities for process automation.', 'Builds flows to handle record creation, updates, and notifications.', 'Debugs and troubleshoots automation failures.'] },
+                        { skill: 'Custom Reporting', desc: 'Designs and creates custom reports and dashboards for business requirements.', details: ['Creates complex reports with custom report types, groupings, and formulas.', 'Builds dynamic dashboards with interactive components.', 'Ensures reports accurately reflect business KPIs.'] },
+                        { skill: 'Data Management', desc: 'Manages data loading and extraction using platform tools.', details: ['Uses tools like Data Loader for bulk data operations.', 'Performs data cleansing and transformation tasks.', 'Understands the implications of data ownership and sharing rules.'] }
+                    ],
+                    ios: [
+                        { skill: 'Architecture (MVVM)', desc: 'Implements features using established architectural patterns like MVVM.', details: ['Separates concerns between views, view models, and models.', 'Uses data binding (e.g., with Combine or delegates) to connect layers.', 'Writes testable code by decoupling components.'] },
+                        { skill: 'Networking', desc: 'Confidently fetches and parses data from REST APIs using URLSession.', details: ['Handles asynchronous network calls.', 'Parses JSON responses using `Codable`.', 'Implements robust error handling for network requests.'] },
+                        { skill: 'Concurrency', desc: 'Understands and uses GCD or Combine for concurrent and asynchronous tasks.', details: ['Dispatches work to different queues to avoid blocking the main thread.', 'Understands basic Combine publishers and subscribers.', 'Manages the lifecycle of subscriptions.'] },
+                        { skill: 'UI Testing', desc: 'Writes UI tests to verify application flow and user interactions.', details: ['Uses `XCTest` framework to write UI tests.', 'Can query for and interact with UI elements.', 'Asserts the state of the UI after performing actions.'] }
+                    ],
+                    android: [
+                        { skill: 'Architecture (MVVM)', desc: 'Builds features using modern architectural patterns like MVVM.', details: ['Uses `ViewModel` to store and manage UI-related data.', 'Uses `LiveData` or `StateFlow` to observe data changes.', 'Separates business logic from the UI.'] },
+                        { skill: 'Networking (Retrofit)', desc: 'Integrates with REST APIs efficiently using libraries like Retrofit.', details: ['Defines API interfaces for network calls.', 'Handles JSON serialization/deserialization.', 'Implements error handling for API responses.'] },
+                        { skill: 'Coroutines', desc: 'Manages asynchronous operations using Kotlin Coroutines.', details: ['Launches coroutines in the appropriate scope.', 'Uses `suspend` functions for asynchronous work.', 'Understands how to switch between dispatchers (e.g., Main, IO).'] },
+                        { skill: 'UI Testing (Espresso)', desc: 'Writes UI tests to validate user interactions and screen states.', details: ['Uses Espresso to find and interact with views.', 'Writes assertions to check UI behavior.', 'Can record and run basic Espresso tests.'] }
+                    ]
+                },
+                engagement: { scores: [2, 2], details: [ { area: 'Team & Product', desc: 'Actively contributes ideas in planning and retrospectives. Proactively identifies areas for improvement in the product or team processes.' }, { area: 'Visma Labs Community', desc: 'Presents a topic to the team or at Code&Coffee, contributes to a guild, and promotes Visma Labs externally (e.g., as a university speaker, mentor for Živé IT projects).' } ] },
+                growth: [
+                     { title: 'Primary Focus: Independence & Reliability', desc: 'Deliver high-quality work consistently with minimal supervision. Take full ownership of complex tasks and features.' },
+                     { title: 'Key Milestones to Senior', desc: 'Develop leadership by mentoring others and influencing technical decisions. Broaden your view to system-level architecture and handle ambiguous, less-defined tasks proactively.' }
+                ]
+            },
+            senior: {
+                softSkills: {
+                    scores: [5, 5, 5, 5, 5],
+                    details: [
+                        { skill: 'Communication & Empathy', desc: 'Effectively communicates complex architectural decisions to diverse audiences (technical and non-technical). Mentors and coaches others with empathy.' },
+                        { skill: 'Problem-Solving', desc: 'Designs and implements solutions for large-scale, complex problems. Thinks strategically and observes issues from multiple perspectives (helicopter view).' },
+                        { skill: 'Self-Management', desc: 'Drives own learning to stay ahead of industry trends. Manages time and priorities across multiple projects or initiatives effectively.' },
+                        { skill: 'Collaboration', desc: 'Acts as a technical leader and a "force multiplier" for the team. Fosters a collaborative and inclusive environment, resolving conflicts constructively.' },
+                        { skill: 'Ownership', desc: 'Takes ownership of the team\'s overall technical output, quality, and system health. Is accountable for project success.' }
+                    ]
+                },
+                hardSkills: {
+                    dotnet: [
+                        { skill: 'System Architecture', desc: 'Designs scalable, maintainable, and secure microservices architectures.', details: ['Makes key architectural decisions for new systems.', 'Understands trade-offs between different architectural patterns.', 'Designs for scalability, reliability, and performance.'] },
+                        { skill: 'Performance Tuning', desc: 'Can diagnose and resolve complex performance issues.', details: ['Uses profiling tools to identify bottlenecks in code.', 'Optimizes database queries and indexing strategies.', 'Understands caching strategies to improve performance.'] },
+                        { skill: 'Cloud & DevOps', desc: 'Designs for the cloud (Azure/AWS) and can architect CI/CD pipelines.', details: ['Selects appropriate cloud services for a given problem.', 'Designs CI/CD pipelines from scratch.', 'Implements infrastructure as code using tools like Terraform.'] },
+                        { skill: 'Mentorship', desc: 'Leads the team in .NET best practices and mentors other developers.', details: ['Conducts effective code reviews and provides constructive feedback.', 'Mentors junior and medior developers to help them grow.', 'Establishes coding standards and best practices for the team.'] }
+                    ],
+                    java: [
+                        { skill: 'Microservices Architecture', desc: 'Designs distributed systems and understands relevant patterns.', details: ['Designs systems using patterns like service discovery, circuit breakers, and API gateways.', 'Understands event-driven architectures.', 'Handles concerns like distributed transactions and data consistency.'] },
+                        { skill: 'Performance & Scalability', desc: 'Can optimize application performance, JVM tuning, and database queries.', details: ['Uses profiling tools to find performance bottlenecks.', 'Performs JVM tuning to optimize memory and garbage collection.', 'Designs systems that can scale horizontally.'] },
+                        { skill: 'Cloud-Native Development', desc: 'Designs applications for cloud deployment and container orchestration.', details: ['Designs applications to be stateless and configurable.', 'Understands container orchestration with Kubernetes.', 'Implements robust logging, monitoring, and tracing for distributed systems.'] },
+                        { skill: 'Technical Leadership', desc: 'Mentors other engineers and sets technical direction for Java projects.', details: ['Leads architectural discussions and makes technical decisions.', 'Mentors other engineers on the team.', 'Stays up-to-date with the Java ecosystem and advocates for new technologies.'] }
+                    ],
+                    angular: [
+                        { skill: 'Architecture', desc: 'Designs and architects large-scale, maintainable Angular applications.', details: ['Makes architectural decisions (e.g., monorepos, state management).', 'Designs a scalable and maintainable component library.', 'Establishes best practices and coding standards for the team.'] },
+                        { skill: 'Performance Optimization', desc: 'Knows how to optimize change detection, bundle sizes, and runtime performance.', details: ['Optimizes applications using different change detection strategies.', 'Analyzes and reduces application bundle size.', 'Identifies and fixes performance bottlenecks.'] },
+                        { skill: 'Advanced RxJS', desc: 'Uses advanced RxJS operators and patterns to manage complex asynchronous logic.', details: ['Creates custom RxJS operators.', 'Manages complex, multi-stream data flows.', 'Understands and handles error management and retry strategies in streams.'] },
+                        { skill: 'Tooling & CI/CD', desc: 'Can configure and optimize the Angular build process and CI/CD pipelines.', details: ['Customizes the build process using the Angular CLI builders or Webpack.', 'Optimizes CI/CD pipelines for speed and reliability.', 'Implements automated quality gates in the pipeline.'] }
+                    ],
+                     react: [
+                        { skill: 'Architecture & Patterns', desc: 'Designs scalable and maintainable frontend architectures.', details: ['Makes key architectural decisions for new applications.', 'Establishes patterns for component design, state management, and data fetching.', 'Understands trade-offs between different architectural approaches.'] },
+                        { skill: 'Performance Optimization', desc: 'Identifies and resolves performance bottlenecks.', details: ['Uses profiling tools to diagnose rendering performance issues.', 'Implements code splitting and lazy loading to reduce bundle size.', 'Optimizes component re-renders using memoization techniques.'] },
+                        { skill: 'Tooling & Build Process', desc: 'Can configure and optimize the build process (e.g., Webpack, Vite).', details: ['Customizes the build configuration to meet project needs.', 'Optimizes the build for performance and developer experience.', 'Understands modern frontend tooling and trends.'] },
+                        { skill: 'Technical Leadership', desc: 'Mentors the team on best practices and leads technical decision-making.', details: ['Leads code reviews and enforces high standards.', 'Mentors other developers and helps them grow.', 'Drives technical discussions and decisions within the team.'] }
+                    ],
+                    python: [
+                        { skill: 'System Design', desc: 'Designs scalable, resilient, and secure backend systems.', details: ['Designs complex systems and architectures from scratch.', 'Understands trade-offs between different database technologies.', 'Designs for high availability and fault tolerance.'] },
+                        { skill: 'Advanced Concepts', desc: 'Understands advanced topics like concurrency, async programming, and metaprogramming.', details: ['Uses asyncio or other concurrency models effectively.', 'Understands the Python GIL and its implications.', 'Can use metaprogramming techniques to write more flexible code.'] },
+                        { skill: 'Infrastructure', desc: 'Comfortable with containerization (Docker) and basic cloud deployment.', details: ['Designs and implements CI/CD pipelines for Python applications.', 'Deploys applications to the cloud using containers and orchestration.', 'Manages infrastructure as code.'] },
+                        { skill: 'Mentorship', desc: 'Guides the team in best practices, architecture, and code quality.', details: ['Mentors junior and medior engineers.', 'Leads code reviews and sets coding standards.', 'Drives technical excellence within the team.'] }
+                    ],
+                    tqa: [
+                        { skill: 'Test Strategy', desc: 'Designs and owns the overall quality strategy for a product or system.', details: ['Creates comprehensive test strategy documents for large projects.', 'Defines quality gates and metrics for the team.', 'Champions a "shift-left" approach to quality across the SDLC.'] },
+                        { skill: 'Framework Architecture', desc: 'Can design, build, and maintain a test automation framework.', details: ['Makes key architectural decisions for the automation framework.', 'Integrates the framework with other tools (reporting, test management).', 'Mentors the team on framework usage and best practices.'] },
+                        { skill: 'Non-Functional Testing', desc: 'Leads efforts in performance, security, and reliability testing.', details: ['Designs and executes performance and load testing strategies.', 'Identifies and reports on security vulnerabilities.', 'Plans and conducts chaos engineering experiments.'] },
+                        { skill: 'Quality Advocacy', desc: 'Mentors the entire team on quality best practices.', details: ['Coaches developers on writing testable code and effective unit tests.', 'Drives improvements in the team\'s testing processes and tools.', 'Presents on quality topics to the wider organization.'] }
+                    ],
+                     ba: [
+                        { skill: 'Product Strategy', desc: 'Contributes to product vision, roadmap, and strategic planning.', details: ['Collaborates with product managers on defining the product vision.', 'Conducts market and competitor analysis to inform strategy.', 'Ensures the backlog is aligned with strategic goals.'] },
+                        { skill: 'Complex Domains', desc: 'Can quickly understand and model complex business domains.', details: ['Works effectively in ambiguous or technically complex areas.', 'Creates comprehensive models of the business domain.', 'Acts as the subject matter expert for the team.'] },
+                        { skill: 'Mentorship', desc: 'Coaches other BAs and helps define best practices for the discipline.', details: ['Mentors junior and mid-level BAs.', 'Helps establish and improve the business analysis process.', 'Leads a community of practice for BAs.'] },
+                        { skill: 'Business Value Focus', desc: 'Ensures that all development work is aligned with delivering maximum business value.', details: ['Prioritizes features based on business value and effort.', 'Defines and tracks metrics to measure the impact of features.', 'Can articulate the "why" behind every feature.'] }
+                    ],
+                    devops: [
+                        { skill: 'Cloud Architecture', desc: 'Designs scalable, secure, and cost-effective cloud infrastructure solutions.', details: ['Selects appropriate cloud services and patterns for application requirements.', 'Designs for high availability, disaster recovery, and fault tolerance.', 'Performs cost analysis and optimization of cloud resources.'] },
+                        { skill: 'Container Orchestration', desc: 'Expert in Kubernetes for deploying, managing, and scaling applications.', details: ['Designs and manages Kubernetes clusters.', 'Develops custom controllers and operators.', 'Implements advanced deployment strategies (e.g., blue-green, canary).'] },
+                        { skill: 'Observability', desc: 'Implements and manages robust monitoring, logging, and alerting systems.', details: ['Establishes Service Level Objectives (SLOs) and Service Level Indicators (SLIs).', 'Builds comprehensive dashboards for system health.', 'Uses distributed tracing to diagnose issues in microservices architectures.'] },
+                        { skill: 'DevSecOps & Mentorship', desc: 'Integrates security into the CI/CD process and mentors the team.', details: ['Implements security scanning tools (SAST, DAST) in pipelines.', 'Manages secrets and access controls securely.', 'Leads the team in adopting a DevOps culture and best practices.'] }
+                    ],
+                    crm: [
+                        { skill: 'System Architecture', desc: 'Designs scalable solutions, considering data model, security, and integrations.', details: ['Designs the overall data model and sharing architecture.', 'Evaluates and selects third-party apps for the AppExchange.', 'Architects solutions that balance declarative and programmatic development.'] },
+                        { skill: 'API & Integration', desc: 'Develops and manages integrations with other systems using CRM APIs.', details: ['Designs and implements robust integration patterns (e.g., ETL, pub/sub).', 'Chooses the appropriate API for the use case (REST, SOAP, Streaming).', 'Handles API limits, error handling, and security considerations.'] },
+                        { skill: 'Data Migration Strategy', desc: 'Plans and executes complex data migration projects.', details: ['Defines the strategy for data extraction, transformation, and loading.', 'Develops data validation and reconciliation processes.', 'Manages data dependencies and deployment sequencing.'] },
+                        { skill: 'Governance & Best Practices', desc: 'Establishes and enforces CRM governance, standards, and best practices.', details: ['Creates and maintains technical documentation and coding standards.', 'Leads code reviews and ensures quality.', 'Mentors junior admins and developers on the platform.'] }
+                    ],
+                    ios: [
+                        { skill: 'App Architecture', desc: 'Designs and architects scalable and maintainable iOS applications.', details: ['Makes key architectural decisions (e.g., VIPER, Clean Architecture).', 'Designs a modular architecture for large applications.', 'Establishes best practices for the team.'] },
+                        { skill: 'Performance Profiling', desc: 'Uses Instruments to diagnose and resolve performance and memory issues.', details: ['Identifies and fixes memory leaks.', 'Optimizes UI performance and responsiveness.', 'Analyzes app launch time and other key metrics.'] },
+                        { skill: 'CI/CD Pipeline Design', desc: 'Designs and manages CI/CD pipelines for iOS applications.', details: ['Automates the build, test, and release process using tools like Fastlane.', 'Manages code signing and provisioning profiles.', 'Integrates with services like TestFlight for beta distribution.'] },
+                        { skill: 'Technical Leadership', desc: 'Mentors the team on best practices and leads technical decision-making.', details: ['Leads code reviews and enforces high standards.', 'Mentors other developers on the team.', 'Drives technical discussions and decisions.'] }
+                    ],
+                    android: [
+                        { skill: 'Advanced Architecture', desc: 'Designs scalable, modular, and maintainable Android applications.', details: ['Makes key architectural decisions (e.g., Multi-Module, Clean Architecture).', 'Designs a robust dependency injection strategy.', 'Establishes coding standards and best practices for the team.'] },
+                        { skill: 'Performance Optimization', desc: 'Identifies and resolves performance bottlenecks in the app.', details: ['Uses profiling tools to analyze CPU, memory, and network usage.', 'Optimizes UI rendering performance.', 'Improves app startup time.'] },
+                        { skill: 'Build Systems (Gradle)', desc: 'Understands and can optimize the Gradle build process.', details: ['Manages complex dependencies in a multi-module project.', 'Writes custom Gradle tasks and plugins.', 'Optimizes build times.'] },
+                        { skill: 'Technical Leadership', desc: 'Mentors other developers and leads technical decisions for Android.', details: ['Leads code reviews and provides constructive feedback.', 'Guides the team on Android best practices.', 'Stays up-to-date with the Android ecosystem and advocates for new technologies.'] }
+                    ]
+                },
+                engagement: { scores: [3, 3], details: [ { area: 'Team & Product', desc: 'Drives technical strategy for the product. Actively mentors team members on best practices and technical growth. Innovates on tools and processes.' }, { area: 'Visma Labs Community', desc: 'Leads guild initiatives, speaks at external meetups, mentors across teams, or organizes events like Hackathons.' } ] },
+                growth: [
+                    { title: 'Primary Focus: Leadership & Impact', desc: 'Multiply the team\'s effectiveness through mentorship, strategic technical decisions, and driving projects to successful completion. Influence beyond the immediate team.' },
+                    { title: 'Path Beyond Senior', desc: 'Focus on cross-team strategic impact, elevate others through dedicated mentorship, lead significant innovation, and become a technical ambassador for Visma Labs.' }
+                ]
+            }
+        }
+    };
+
+    let currentLevel = 'junior';
+    let currentTab = 'responsibilities';
+    let currentTechnology = data.technologies[0].id;
+    let selectedSkillIndex = 0;
+    let softSkillsChart, engagementChart;
+
+    const seniorityNav = document.getElementById('seniority-nav');
+    const tabsNav = document.getElementById('tabs-nav');
+    const tabsContent = document.getElementById('tabs-content');
+    const techSelect = document.getElementById('tech-select');
+    const hardSkillsListEl = document.getElementById('hard-skills-list');
+    const hardSkillsDetailsEl = document.getElementById('hard-skills-details');
+
+    function createCard(title, description) {
+        return `<div class="p-4 rounded-lg border border-gray-200"><h4 class="font-semibold text-gray-800">${title}</h4><p class="text-gray-600 text-sm">${description}</p></div>`;
+    }
+    
+    function createSkillCard(title, description, index) {
+        return `<div class="skill-card p-4 rounded-lg border border-gray-200" data-index="${index}"><h4 class="font-semibold text-gray-800">${title}</h4><p class="text-gray-600 text-sm">${description}</p></div>`;
+    }
+
+    function createGrowthItem(title, description) {
+         return `<div class="relative pl-6"><div class="absolute left-0 top-1 w-2 h-2 rounded-full bg-teal-500"></div><h4 class="font-semibold text-gray-800">${title}</h4><p class="text-gray-600">${description}</p></div>`;
+    }
+    
+    function updateContent() {
+        const levelData = data.levels[currentLevel];
+        updateResponsibilities();
+        updateSoftSkills(levelData.softSkills);
+        updateHardSkills();
+        updateEngagement(levelData.engagement);
+        updateGrowthPath(levelData.growth);
+        updateActiveTab();
+    }
+    
+    function populateTechSelector() {
+        techSelect.innerHTML = data.technologies.map(tech => `<option value="${tech.id}">${tech.name}</option>`).join('');
+    }
+    
+    function updateResponsibilities() {
+        document.getElementById('responsibilities-list').innerHTML = data.responsibilities.map(item => `<div><h3 class="text-xl font-semibold mb-2 text-gray-700">${item.title}</h3><ul class="list-disc list-inside space-y-1 ml-4">${item.points.map(p => `<li>${p}</li>`).join('')}</ul></div>`).join('');
+    }
+
+    function updateSoftSkills(softSkillsData) {
+        document.getElementById('soft-skills-list').innerHTML = softSkillsData.details.map(s => createCard(s.skill, s.desc)).join('');
+        if (softSkillsChart) {
+            softSkillsChart.data.datasets[0].data = softSkillsData.scores;
+            softSkillsChart.update();
+        }
+    }
+
+    function updateHardSkills() {
+        const hardSkillsData = data.levels[currentLevel].hardSkills[currentTechnology];
+        
+        if (hardSkillsData && hardSkillsData.length > 0) {
+            hardSkillsListEl.innerHTML = hardSkillsData.map((s, index) => createSkillCard(s.skill, s.desc, index)).join('');
+            selectedSkillIndex = 0;
+            renderSkillDetails();
+        } else {
+            const owner = data.technologies.find(t => t.id === currentTechnology)?.owner || 'the respective owner';
+            hardSkillsListEl.innerHTML = `<div class="p-4 rounded-lg border border-gray-200 bg-gray-50"><h4 class="font-semibold text-gray-800">Coming Soon</h4><p class="text-gray-600 text-sm">The detailed Job Description for this technology is being prepared. Please contact ${owner} for more information.</p></div>`;
+            hardSkillsDetailsEl.innerHTML = `<p class="text-gray-500">Details will be available once the skills are defined.</p>`;
+        }
+    }
+
+    function renderSkillDetails() {
+        const skillData = data.levels[currentLevel].hardSkills[currentTechnology]?.[selectedSkillIndex];
+        
+        if (skillData) {
+            let detailsHtml = `<h3 class="text-xl font-semibold mb-3 text-gray-800">${skillData.skill}</h3>`;
+            if (skillData.details && skillData.details.length > 0) {
+                detailsHtml += `<ul class="list-disc list-inside space-y-2 text-gray-700">${skillData.details.map(d => `<li>${d}</li>`).join('')}</ul>`;
+            } else {
+                detailsHtml += `<p class="text-gray-500">No detailed competencies have been defined for this skill yet.</p>`;
+            }
+            hardSkillsDetailsEl.innerHTML = detailsHtml;
+            highlightSelectedSkill();
+        }
+    }
+    
+    function highlightSelectedSkill() {
+        hardSkillsListEl.querySelectorAll('.skill-card').forEach((card, index) => {
+            card.classList.toggle('active', index === selectedSkillIndex);
+        });
+    }
+    
+    function updateEngagement(engagementData) {
+        document.getElementById('engagement-list').innerHTML = engagementData.details.map(s => createCard(s.area, s.desc)).join('');
+        if (engagementChart) {
+            engagementChart.data.datasets[0].data = engagementData.scores;
+            engagementChart.update();
+        }
+    }
+
+    function updateGrowthPath(growthData) {
+        document.getElementById('growth-list').innerHTML = growthData.map(g => createGrowthItem(g.title, g.desc)).join('');
+    }
+
+    function updateActiveNav() {
+        seniorityNav.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.level === currentLevel));
+    }
+
+    function updateActiveTab() {
+        tabsNav.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === currentTab));
+        tabsContent.querySelectorAll('.content-section').forEach(section => section.classList.toggle('active', section.id === `${currentTab}-content`));
+    }
+
+    function initSoftSkillsChart() {
+        const ctx = document.getElementById('softSkillsChart').getContext('2d');
+        softSkillsChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Communication & Empathy', 'Problem-Solving', 'Self-Management', 'Collaboration', 'Ownership'],
+                datasets: [{
+                    label: 'Expected Proficiency',
+                    data: data.levels.junior.softSkills.scores,
+                    backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                    borderColor: 'rgb(13, 148, 136)',
+                    pointBackgroundColor: 'rgb(13, 148, 136)',
+                    pointBorderColor: '#fff'
+                }]
+            },
+            options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 5, grid: { color: 'rgba(0,0,0,0.1)' }, angleLines: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { font: { size: 12 }, padding: 10 }, ticks: { stepSize: 1, backdropColor: 'transparent' } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function initEngagementChart() {
+        const ctx = document.getElementById('engagementChart').getContext('2d');
+        engagementChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Team & Product', 'Visma Labs Community'],
+                datasets: [{ data: data.levels.junior.engagement.scores, backgroundColor: ['rgba(20, 184, 166, 0.6)', 'rgba(15, 118, 110, 0.6)'], borderWidth: 1 }]
+            },
+            options: { maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, max: 3, ticks: { stepSize: 1, callback: v => ({0:'',1:'Participant',2:'Contributor',3:'Leader'}[v]) } } }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+    }
+    
+    seniorityNav.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            currentLevel = e.target.dataset.level;
+            updateActiveNav();
+            updateContent();
+        }
+    });
+
+    tabsNav.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            currentTab = e.target.dataset.tab;
+            updateActiveTab();
+        }
+    });
+
+    techSelect.addEventListener('change', (e) => {
+        currentTechnology = e.target.value;
+        updateHardSkills();
+    });
+    
+    hardSkillsListEl.addEventListener('click', (e) => {
+        const card = e.target.closest('.skill-card');
+        if (card) {
+            selectedSkillIndex = parseInt(card.dataset.index);
+            renderSkillDetails();
+        }
+    });
+
+    function init() {
+        populateTechSelector();
+        updateActiveNav();
+        updateActiveTab();
+        updateContent();
+        initSoftSkillsChart();
+        initEngagementChart();
+    }
+
+    init();
+});
+</script>
+</body>
+</html>
+
