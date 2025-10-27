@@ -15,7 +15,7 @@
         - Seniority Levels: Presented as primary buttons for clear, top-level navigation. Goal: Allow user to control the entire view.
         - Technology Selector: A dropdown within the Hard Skills tab. Goal: Allow users to drill down into technology-specific requirements.
         - Core Responsibilities: A static list. Goal: Inform about baseline duties. No interaction needed.
-        - Soft Skills: A radar chart (Chart.js) and detailed text. Goal: Visually compare proficiency expectations across levels. Interaction: Chart updates on seniority selection.
+        - Soft Skills: A radar chart (Chart.js) and detailed text. Goal: Visually compare proficiency expectations across levels. Interaction: Chart updates on seniority selection. Added explanation text for clarity.
         - Hard Skills: Interactive list of skills. Clicking a skill on the left updates a details panel on the right with specific competencies. Goal: Provide a two-tiered view of technical benchmarks.
         - Engagement: A bar chart (Chart.js) and text. Goal: Show the evolution of engagement from passive to active. Interaction: Chart updates with seniority level.
         - Growth Path: Dynamic text list combined with a static, detailed process description. Goal: Clarify advancement criteria and the official promotion procedure.
@@ -114,7 +114,10 @@
                 <section id="soft-skills-content" class="content-section">
                     <div class="mb-6">
                         <h2 class="text-2xl font-semibold text-gray-700">Soft Skills Expectations</h2>
-                        <p class="mt-1 text-gray-600">Soft skills are crucial for effective collaboration and personal growth. This section explores how expectations in areas like communication, problem-solving, and teamwork evolve with seniority. The chart provides a visual summary of proficiency, while the text below gives concrete examples.</p>
+                        <p class="mt-1 text-gray-600">Soft skills are crucial for effective collaboration and personal growth. This section explores how expectations in areas like communication, problem-solving, and teamwork evolve with seniority.</p>
+                         <p class="mt-2 text-sm text-gray-500">
+                           <span class="font-semibold">Chart Guide:</span> The radar chart shows the <span class="font-semibold text-teal-700">expected proficiency level (1-5 scale)</span> for each skill at the selected seniority. A point further from the center means a higher expectation. Compare charts across levels to see how expectations grow.
+                        </p>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                         <div class="chart-container">
@@ -154,6 +157,9 @@
                     <div class="mb-6">
                         <h2 class="text-2xl font-semibold text-gray-700">Engagement & Initiative</h2>
                         <p class="mt-1 text-gray-600">Engagement goes beyond daily tasks; it's about contributing to our shared culture. This section illustrates how your involvement is expected to grow across the team, the local company, and the wider Visma group.</p>
+                         <p class="mt-2 text-sm text-gray-500">
+                           <span class="font-semibold">Chart Guide:</span> The bar chart shows the expected level of engagement (1=Participant, 2=Contributor, 3=Leader) in different areas.
+                        </p>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                          <div class="chart-container h-96">
@@ -235,9 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const data = {
         responsibilities: [
-            { title: 'Attendance and Working Hours', points: ['Properly and promptly records attendance.', 'Adheres to agreed working hours and flexibility rules.'] },
-            { title: 'Communication', points: ['Actively uses company communication tools (Gmail, Slack, Calendar).', 'Informs supervisor and team about absence in a timely manner, respecting internal policies and the Labour Code.'] },
-            { title: 'Compliance with Regulations', points: ['Respects and complies with the Labour Code, Work Regulations, and all internal policies.', 'Protects company and client intellectual property and sensitive data.'] }
+            { title: 'Attendance and Working Hours', points: ['Properly record attendance.', 'Adhere to agreed working hours.'] },
+            { title: 'Communication and Information', points: ['Use company communication tools.', 'Inform about absence promptly.'] },
+            { title: 'Compliance with Regulations and Internal Policies', points: ['Respect Labour Code and internal rules.', 'Follow company guidelines.'] },
+            { title: 'Data Protection and Information Security', points: ['Protect sensitive data.', 'Adhere to security protocols.'] },
+            { title: 'Professional Conduct and Ethics', points: ['Maintain professional behavior.', 'Uphold ethical standards.'] },
+            { title: 'Health and Safety at Work', points: ['Follow safety guidelines.', 'Report hazards.'] },
+            { title: 'Use of Company Assets', points: ['Use assets responsibly.', 'Protect company property.'] },
+            { title: 'Absence and Leave', points: ['Follow procedures for requesting leave.', 'Report absences according to policy.'] }
         ],
         technologies: [
             { id: 'dotnet', name: '.NET / C#', owner: 'TBD' },
@@ -601,10 +612,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateEngagement(engagementData) {
         document.getElementById('engagement-list').innerHTML = engagementData.details.map(s => createCard(s.area, s.desc)).join('');
         if (engagementChart) {
-            engagementChart.data.datasets[0].data = engagementData.scores;
-            engagementChart.update();
+            // Check if scores array needs update (added Visma-wide)
+            if (engagementChart.data.datasets[0].data.length !== engagementData.scores.length) {
+                // Re-initialize chart if labels changed
+                 if (engagementChart) engagementChart.destroy(); // Destroy existing chart first
+                 initEngagementChart(); // This will use the latest scores from data
+            } else {
+                engagementChart.data.datasets[0].data = engagementData.scores;
+                engagementChart.update();
+            }
+        } else {
+             initEngagementChart(); // Initialize if it doesn't exist
         }
     }
+
 
     function updateGrowthPath(growthData) {
         document.getElementById('growth-list').innerHTML = growthData.map(g => createGrowthItem(g.title, g.desc)).join('');
@@ -640,11 +661,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initEngagementChart() {
         const ctx = document.getElementById('engagementChart').getContext('2d');
+        const levelData = data.levels[currentLevel];
+        const initialScores = levelData?.engagement?.scores || [1, 1, 1]; // Default scores for 3 categories
+        
         engagementChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: ['Team & Product', 'Visma Labs Community', 'Visma-wide Engagement'],
-                datasets: [{ data: data.levels.junior.engagement.scores, backgroundColor: ['rgba(20, 184, 166, 0.6)', 'rgba(15, 118, 110, 0.6)', 'rgba(13, 148, 136, 0.4)'], borderWidth: 1 }]
+                datasets: [{ data: initialScores, backgroundColor: ['rgba(20, 184, 166, 0.6)', 'rgba(15, 118, 110, 0.6)', 'rgba(13, 148, 136, 0.4)'], borderWidth: 1 }]
             },
             options: { maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, max: 3, ticks: { stepSize: 1, callback: v => ({0:'',1:'Participant',2:'Contributor',3:'Leader'}[v]) } } }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
@@ -682,9 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
         populateTechSelector();
         updateActiveNav();
         updateActiveTab();
-        updateContent();
+        updateContent(); // Ensure initial content load uses the right engagement scores
         initSoftSkillsChart();
-        initEngagementChart();
+        // Engagement chart init is now handled within updateEngagement if it doesn't exist
     }
 
     init();
@@ -692,4 +716,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
