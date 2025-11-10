@@ -163,7 +163,11 @@
                         <h2 class="text-2xl font-bold text-gray-800">Foundational Duties</h2>
                         <p class="mt-1 text-gray-600">This section outlines the basic duties and responsibilities required of every employee at Visma Labs, regardless of their seniority level. These expectations, derived from labor laws and internal policies, form the professional foundation upon which all other skills are built.</p>
                     </div>
-                    <div id="responsibilities-list" class="space-y-5"></div>
+                    <!-- === UPDATED LAYOUT FOR RESPONSIBILITIES === -->
+                    <div id="responsibilities-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Content will be injected here by JS -->
+                    </div>
+                    <!-- === END OF UPDATE === -->
                 </section>
 
                 <section id="soft-skills-content" class="content-section">
@@ -174,11 +178,12 @@
                            <span class="font-semibold block mb-1">Chart Guide:</span> The radar chart shows the <span class="font-semibold text-[#005581]">expected proficiency level (1-5 scale)</span> for each skill at the selected seniority. A point further from the center means a higher expectation. Compare charts across levels to see how expectations grow.
                         </p>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         <div class="chart-container">
                             <canvas id="softSkillsChart"></canvas>
                         </div>
-                        <div id="soft-skills-list" class="space-y-4"></div>
+                        <!-- Changed to a 2-column grid for the list -->
+                        <div id="soft-skills-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                     </div>
                 </section>
 
@@ -198,6 +203,14 @@
                             <div class="ml-3 flex-grow">
                                 <label for="tech-select" class="block text-base font-semibold">Select Technology Stack</label>
                                 <select id="tech-select" name="tech-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#005581] focus:border-[#005581] sm:text-sm rounded-md shadow-sm"></select>
+                                <!-- === ADDED DYNAMIC LINK === -->
+                                <a id="tech-sheet-link" href="#" target="_blank" class="mt-3 inline-flex items-center text-sm font-semibold text-[#005581] hover:text-[#004469] underline" style="display: none;">
+                                    View Full Technical Profile
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
+                                <!-- === END OF UPDATE === -->
                             </div>
                         </div>
                     </div>
@@ -293,7 +306,7 @@
         </main>
     </div>
 
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- Chart Colors based on Visma Palette ---
     const vismaMarine = '#005581';
@@ -305,29 +318,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const vismaMarineDark = 'rgba(0, 40, 64, 0.4)'; // Darker Marine for bars
 
     const data = {
+        // === UPDATED RESPONSIBILITIES DATA STRUCTURE ===
         responsibilities: [
-            { title: 'Attendance and Working Hours', points: ['Properly record attendance.', 'Adhere to agreed working hours.'] },
-            { title: 'Communication and Information', points: ['Use company communication tools.', 'Inform about absence promptly.'] },
-            { title: 'Compliance with Regulations and Internal Policies', points: ['Respect Labour Code and internal rules.', 'Follow company guidelines.'] },
-            { title: 'Data Protection and Information Security', points: ['Protect sensitive data.', 'Adhere to security protocols.'] },
-            { title: 'Professional Conduct and Ethics', points: ['Maintain professional behavior.', 'Uphold ethical standards.'] },
-            { title: 'Health and Safety at Work', points: ['Follow safety guidelines.', 'Report hazards.'] },
-            { title: 'Use of Company Assets', points: ['Use assets responsibly.', 'Protect company property.'] },
-            { title: 'Absence and Leave', points: ['Follow procedures for requesting leave.', 'Report absences according to policy.'] }
+            { 
+                groupTitle: 'Workplace & Conduct',
+                items: [
+                    { title: 'Professional Conduct and Ethics', points: ['Maintain professional behavior.', 'Uphold ethical standards.'] },
+                    { title: 'Health and Safety at Work', points: ['Follow safety guidelines.', 'Report hazards.'] }
+                ]
+            },
+            {
+                groupTitle: 'Policies & Compliance',
+                items: [
+                    { title: 'Compliance with Regulations and Internal Policies', points: ['Respect Labour Code and internal rules.', 'Follow company guidelines.'] },
+                    { title: 'Data Protection and Information Security', points: ['Protect sensitive data.', 'Adhere to security protocols.'] }
+                ]
+            },
+            {
+                groupTitle: 'Operations & Logistics',
+                items: [
+                    { title: 'Attendance and Working Hours', points: ['Properly record attendance.', 'Adhere to agreed working hours.'] },
+                    { title: 'Absence and Leave', points: ['Follow procedures for requesting leave.', 'Report absences according to policy.'] },
+                    { title: 'Use of Company Assets', points: ['Use assets responsibly.', 'Protect company property.'] }
+                ]
+            },
+            {
+                groupTitle: 'Communication',
+                items: [
+                    { title: 'Communication and Information', points: ['Use company communication tools.', 'Inform about absence promptly.'] }
+                ]
+            }
         ],
+        // === END OF UPDATE ===
+        <!-- === UPDATED TECHNOLOGIES WITH LINKS === -->
         technologies: [
-            { id: 'dotnet', name: '.NET / C#', owner: 'TBD' },
-            { id: 'java', name: 'Java', owner: 'TBD' },
-            { id: 'angular', name: 'Angular', owner: 'TBD' },
-            { id: 'react', name: 'React', owner: 'Kasarda, Kobol' },
-            { id: 'python', name: 'Python', owner: 'Mesaros, Augustinak' },
-            { id: 'tqa', name: 'TQA', owner: 'Zajo, Miro, Janci' },
-            { id: 'ba', name: 'Business Analysis', owner: 'Tonka, Patrik, Martin' },
-            { id: 'devops', name: 'DevOps', owner: 'Olejar, Ondrasek' },
-            { id: 'crm', name: 'CRM', owner: 'Wagner, Baranec' },
-            { id: 'ios', name: 'iOS', owner: 'Danko, Sulek' },
-            { id: 'android', name: 'Android', owner: 'Katona, Richter, Dobransky' }
+            { id: 'dotnet', name: '.NET / C#', owner: 'TBD', url: 'https://docs.google.com/spreadsheets/d/152gCY-99JF-_DOuOxjgnsuFQZwXffZNPLn5iXbTAovE/edit?gid=2056326054#gid=2056326054' },
+            { id: 'java', name: 'Java', owner: 'TBD', url: 'https://docs.google.com/spreadsheets/d/1c1sK6TeMpuVn1cyWvJOgMj-vDOqUsI5RYZ4Rn4Lckfw/edit?gid=628642450#gid=628642450' },
+            { id: 'angular', name: 'Angular', owner: 'TBD', url: 'https://docs.google.com/spreadsheets/d/1amZaDDydH-0cHLdHEyX48FjtWN-y6rgVyfprJqrMKrM/edit?gid=1984927062#gid=1984927062' },
+            { id: 'react', name: 'React', owner: 'Kasarda, Kobol', url: 'https://docs.google.com/spreadsheets/d/1n9qWGZ0pO9ssC2F0L4lvESBobkvwLI-SFFrlMaAwZxg/edit?gid=56336861#gid=56336861' },
+            { id: 'python', name: 'Python', owner: 'Mesaros, Augustinak', url: 'https://docs.google.com/spreadsheets/d/1m7-1GoVjGYrnpy2WtouPuyr-TYa5XSeX-zAcThhDfNg/edit?gid=1947188489#gid=1947188489' },
+            { id: 'tqa', name: 'TQA', owner: 'Zajo, Miro, Janci', url: 'https://docs.google.com/spreadsheets/d/1cKc6nUR6Cs6i7bSEVsaMNC8aXftzOE4rWQuhwaHvBSI/edit?gid=986468734#gid=986468734' },
+            { id: 'ba', name: 'Business Analysis', owner: 'Tonka, Patrik, Martin', url: 'https://docs.google.com/spreadsheets/d/1_eiW9eo_YUQPPTpjqExo_omeL26xTDoc-vglqQNWLuU/edit?gid=0#gid=0' },
+            { id: 'devops', name: 'DevOps', owner: 'Olejar, Ondrasek', url: 'https://docs.google.com/spreadsheets/d/1KHMmY1fyBgC73b3WNNkKhuXUwadEoX0Avw6fkzst58U/edit?gid=0#gid=0' }, // URL ADDED
+            { id: 'crm', name: 'CRM', owner: 'Wagner, Baranec', url: 'https://docs.google.com/spreadsheets/d/1i6pqsZeBduR3cm8ed2e2hhB2dzRdusowZGtp0qkNtwc/edit?gid=2056326054#gid=2056326054' },
+            { id: 'ios', name: 'iOS', owner: 'Danko, Sulek', url: 'https://docs.google.com/spreadsheets/d/16yEn2s_YrnXTF07V5N7JDtZ3oYa5PrvgOK30T6PCTPg/edit?gid=0#gid=0' },
+            { id: 'android', name: 'Android', owner: 'Katona, Richter, Dobransky', url: 'https://docs.google.com/spreadsheets/d/138d_SOHWRJD66Q0woPIKT9wBfKcj7RyXwOqP80aiXmc/edit?gid=0#gid=0' } // URL ADDED
         ],
+        // === END OF UPDATE ===
         levels: {
             junior: {
                 softSkills: {
@@ -485,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         { skill: 'Architecture (MVVM)', desc: 'Implements features using established architectural patterns like MVVM.', details: ['Separates concerns between views, view models, and models.', 'Uses data binding (e.g., with Combine or delegates) to connect layers.', 'Writes testable code by decoupling components.'] },
                         { skill: 'Networking', desc: 'Confidently fetches and parses data from REST APIs using URLSession.', details: ['Handles asynchronous network calls.', 'Parses JSON responses using `Codable`.', 'Implements robust error handling for network requests.'] },
                         { skill: 'Concurrency', desc: 'Understands and uses GCD or Combine for concurrent and asynchronous tasks.', details: ['Dispatches work to different queues to avoid blocking the main thread.', 'Understands basic Combine publishers and subscribers.', 'Manages the lifecycle of subscriptions.'] },
-                        { skill: 'UI Testing', desc: 'Writes UI tests to verify application flow and user interactions.', details: ['Uses `XCTest` framework to write UI tests.', 'Can query for and interact with UI elements.', 'Asserts the state of the UI after performing actions.'] }
+                        { skill: 'Unite UI Testing', desc: 'Writes UI tests to verify application flow and user interactions.', details: ['Uses `XCTest` framework to write UI tests.', 'Can query for and interact with UI elements.', 'Asserts the state of the UI after performing actions.'] }
                     ],
                     android: [
                         { skill: 'Architecture (MVVM)', desc: 'Builds features using modern architectural patterns like MVVM.', details: ['Uses `ViewModel` to store and manage UI-related data.', 'Uses `LiveData` or `StateFlow` to observe data changes.', 'Separates business logic from the UI.'] },
@@ -600,6 +637,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const techSelect = document.getElementById('tech-select');
     const hardSkillsListEl = document.getElementById('hard-skills-list');
     const hardSkillsDetailsEl = document.getElementById('hard-skills-details');
+    // === ADDED LINK ELEMENT ===
+    const techSheetLinkEl = document.getElementById('tech-sheet-link');
+    // === END OF UPDATE ===
 
     function createCard(title, description) {
         // Updated Card styling
@@ -624,18 +664,43 @@ document.addEventListener('DOMContentLoaded', () => {
         updateEngagement(levelData.engagement);
         updateGrowthPath(levelData.growth);
         updateActiveTab();
+        updateTechLink(); // Also update link on seniority change
     }
     
     function populateTechSelector() {
         techSelect.innerHTML = data.technologies.map(tech => `<option value="${tech.id}">${tech.name}</option>`).join('');
     }
     
+    // === UPDATED FUNCTION ===
     function updateResponsibilities() {
-        // Adjusted styling for list items
-        document.getElementById('responsibilities-list').innerHTML = data.responsibilities.map(item => `<div><h3 class="text-lg font-semibold mb-2 text-gray-800">${item.title}</h3><ul class="list-disc list-outside space-y-1.5 ml-5">${item.points.map(p => `<li class="text-gray-600">${p}</li>`).join('')}</ul></div>`).join('');
+        // New function to render grouped responsibilities in columns
+        const listEl = document.getElementById('responsibilities-list');
+        listEl.innerHTML = data.responsibilities.map(group => {
+            // Create the HTML for each item within the group
+            const itemsHtml = group.items.map(item => `
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-800">${item.title}</h4>
+                    <ul class="list-disc list-outside space-y-1 mt-1 ml-5">
+                        ${item.points.map(p => `<li class="text-gray-600">${p}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            // Return the full group card
+            return `
+                <div class="p-5 rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col">
+                    <h3 class="text-lg font-bold mb-4 text-[#005581]">${group.groupTitle}</h3>
+                    <div class="space-y-4">
+                        ${itemsHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
+    // === END OF UPDATE ===
 
     function updateSoftSkills(softSkillsData) {
+        // This now targets the 2-column grid
         document.getElementById('soft-skills-list').innerHTML = softSkillsData.details.map(s => createCard(s.skill, s.desc)).join('');
         if (softSkillsChart) {
             softSkillsChart.data.datasets[0].data = softSkillsData.scores;
@@ -710,6 +775,19 @@ document.addEventListener('DOMContentLoaded', () => {
         tabsNav.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === currentTab));
         tabsContent.querySelectorAll('.content-section').forEach(section => section.classList.toggle('active', section.id === `${currentTab}-content`));
     }
+
+    // === NEW FUNCTION TO UPDATE TECH LINK ===
+    function updateTechLink() {
+        const tech = data.technologies.find(t => t.id === currentTechnology);
+        if (tech && tech.url) {
+            techSheetLinkEl.href = tech.url;
+            techSheetLinkEl.style.display = 'inline-flex';
+        } else {
+            techSheetLinkEl.style.display = 'none';
+        }
+    }
+    // === END OF NEW FUNCTION ===
+
 
     // --- Initialize Charts ---
     function initSoftSkillsChart() {
@@ -828,6 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
     techSelect.addEventListener('change', (e) => {
         currentTechnology = e.target.value;
         updateHardSkills();
+        updateTechLink(); // Update link on change
     });
     
     hardSkillsListEl.addEventListener('click', (e) => {
@@ -842,14 +921,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         populateTechSelector();
         updateActiveNav();
-        // Set the default active tab visually and content-wise
-        currentTab = 'responsibilities'; // Or whichever should be default
-        tabsNav.querySelector(`[data-tab='${currentTab}']`).classList.add('active');
-        tabsContent.querySelector(`#${currentTab}-content`).classList.add('active');
         
-        updateContent(); // Load initial data
+        // currentTab is already 'responsibilities' from global scope
+        
+        updateContent(); // Load initial data (this will also call updateActiveTab)
         initSoftSkillsChart();
         initEngagementChart(); 
+        updateTechLink(); // Set initial link
 
         // Adjust chart label size on resize
         window.addEventListener('resize', () => {
@@ -865,4 +943,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
